@@ -33,7 +33,7 @@
             <!-- 显示被动技能属性 -->
             <div v-if="skill.passive" class="passive-attrs">
               <span v-for="(value, key) in skill.passive" :key="key" class="attr-tag">
-                {{ getAttrName(key) }}+{{ formatAttrValue(key, value) }}
+                {{ getAttrName(key) }}+{{ formatAttrValue(key, value as number) }}
               </span>
             </div>
             <!-- 显示升级消耗 -->
@@ -75,7 +75,7 @@
             <!-- 显示被动技能属性 -->
             <div v-if="skill.passive" class="passive-attrs">
               <span v-for="(value, key) in skill.passive" :key="key" class="attr-tag">
-                {{ getAttrName(key) }}+{{ formatAttrValue(key, value) }}
+                {{ getAttrName(key) }}+{{ formatAttrValue(key, value as number) }}
               </span>
             </div>
             <div class="skill-cost">

@@ -144,16 +144,16 @@ export function getEquipmentRarityForMap(mapRealmIndex: number): EquipmentRarity
     3: [EquipmentRarity.EARTH, EquipmentRarity.HEAVEN], // 元婴期: 地品-天品
     4: [EquipmentRarity.HEAVEN, EquipmentRarity.IMMORTAL], // 化神期: 天品-仙品
     5: [EquipmentRarity.IMMORTAL, EquipmentRarity.ARTIFACT], // 炼虚期: 仙品-神器
-    6: [EquipmentRarity.ARTIFACT, EquipmentRarity.POSTNATAL_TREASURE], // 大乘期: 神器-后天灵宝
-    7: [EquipmentRarity.POSTNATAL_TREASURE, EquipmentRarity.POSTNATAL_SUPREME], // 渡劫期: 后天灵宝-后天至宝
-    8: [EquipmentRarity.POSTNATAL_SUPREME, EquipmentRarity.INNATE_TREASURE], // 地仙: 后天至宝-先天灵宝
-    9: [EquipmentRarity.INNATE_TREASURE, EquipmentRarity.INNATE_SUPREME], // 天仙: 先天灵宝-先天至宝
-    10: [EquipmentRarity.INNATE_SUPREME, EquipmentRarity.CHAOS_TREASURE], // 玄仙: 先天至宝-混沌灵宝
-    11: [EquipmentRarity.CHAOS_TREASURE, EquipmentRarity.CHAOS_SUPREME], // 金仙: 混沌灵宝-混沌至宝
-    12: [EquipmentRarity.CHAOS_TREASURE, EquipmentRarity.CHAOS_SUPREME], // 太乙金仙: 混沌灵宝-混沌至宝
-    13: [EquipmentRarity.CHAOS_SUPREME], // 大罗金仙: 混沌至宝
-    14: [EquipmentRarity.CHAOS_SUPREME], // 准圣: 混沌至宝
-    15: [EquipmentRarity.CHAOS_SUPREME], // 混元圣人: 混沌至宝
+    6: [EquipmentRarity.IMMORTAL, EquipmentRarity.POSTNATAL_TREASURE], // 大乘期: 仙品-后天灵宝
+    7: [EquipmentRarity.ARTIFACT, EquipmentRarity.POSTNATAL_TREASURE], // 渡劫期: 神器-后天灵宝
+    8: [EquipmentRarity.POSTNATAL_TREASURE, EquipmentRarity.INNATE_TREASURE], // 地仙: 后天灵宝-先天灵宝
+    9: [EquipmentRarity.POSTNATAL_TREASURE, EquipmentRarity.INNATE_TREASURE], // 天仙: 后天灵宝-先天灵宝
+    10: [EquipmentRarity.POSTNATAL_TREASURE, EquipmentRarity.INNATE_TREASURE], // 玄仙: 后天灵宝-先天灵宝
+    11: [EquipmentRarity.POSTNATAL_SUPREME, EquipmentRarity.INNATE_TREASURE], // 金仙: 后天至宝-先天灵宝
+    12: [EquipmentRarity.POSTNATAL_SUPREME, EquipmentRarity.INNATE_TREASURE], // 太乙金仙: 后天至宝-先天灵宝
+    13: [EquipmentRarity.POSTNATAL_SUPREME, EquipmentRarity.INNATE_SUPREME], // 大罗金仙: 后天至宝-先天至宝
+    14: [EquipmentRarity.INNATE_TREASURE, EquipmentRarity.CHAOS_TREASURE], // 准圣: 先天灵宝-混沌灵宝
+    15: [EquipmentRarity.CHAOS_TREASURE,EquipmentRarity.CHAOS_SUPREME], // 混元圣人: 混沌灵宝-混沌至宝
   }
 
   const availableRarities = rarityRangesByRealm[mapRealmIndex] || [EquipmentRarity.COMMON]

@@ -50,10 +50,10 @@
           v-for="(realm, index) in realms"
           :key="realm.id"
           class="realm-item"
-          :class="{ active: index === player?.realm.realmIndex, locked: index > player?.realm.realmIndex }"
+          :class="{ active: index === player?.realm?.realmIndex, locked: index > (player?.realm?.realmIndex ?? -1) }"
         >
           <div class="realm-item-name">{{ realm.name }}</div>
-          <div class="realm-item-desc">{{ index === player?.realm.realmIndex ? '当前境界' : index < player?.realm.realmIndex ? '已突破' : '未解锁' }}</div>
+          <div class="realm-item-desc">{{ index === player?.realm?.realmIndex ? '当前境界' : index < (player?.realm?.realmIndex ?? -1) ? '已突破' : '未解锁' }}</div>
         </div>
       </div>
     </div>

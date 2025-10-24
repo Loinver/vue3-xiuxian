@@ -9,6 +9,11 @@ declare module 'vue' {
   export interface GlobalComponents {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    VanCell: typeof import('vant/es')['Cell']
+    VanCellGroup: typeof import('vant/es')['CellGroup']
+    VanCheckbox: typeof import('vant/es')['Checkbox']
+    VanCheckboxGroup: typeof import('vant/es')['CheckboxGroup']
+    VanPopup: typeof import('vant/es')['Popup']
     VanSwitch: typeof import('vant/es')['Switch']
     VanTabbar: typeof import('vant/es')['Tabbar']
     VanTabbarItem: typeof import('vant/es')['TabbarItem']

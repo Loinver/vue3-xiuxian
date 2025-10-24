@@ -26,20 +26,27 @@
         <div class="card-title">背包 ({{ player?.inventory.equipments.length }}/{{ player?.inventory.maxSize }})</div>
         <div class="batch-actions" v-if="player?.inventory.equipments.length">
           <button
-            class="btn-select-all"
+            class="btn-batch-sell-by-quality"
             size="mini"
-            @click="handleSelectAll"
+            @click="handleBatchSellByQuality"
           >
-            {{ isAllSelected ? '取消全选' : '全选' }}
+            按品质出售
           </button>
           <button
-            class="btn-batch-sell"
+            class="btn-batch-sell-by-rarity"
             size="mini"
-            :disabled="selectedEquipments.length === 0"
-            @click="handleBatchSell"
+            @click="handleBatchSellByRarity"
           >
-            批量出售({{ selectedEquipments.length }})
+            按稀有度出售
           </button>
+          <button
+            class="btn-batch-sell-by-realm"
+            size="mini"
+            @click="handleBatchSellByRealm"
+          >
+            按需求境界
+          </button>
+
         </div>
       </div>
       <div style="overflow-y: auto" class="inventory-list">
@@ -78,6 +85,13 @@
           </div>
           <div class="btn-group">
             <button
+              class="btn-enhance"
+              size="mini"
+              @click="handleEnhanceClick(eq)"
+            >
+              强化
+            </button>
+            <button
               class="btn-equip"
               :class="{ 'btn-disabled': !canEquip(eq) }"
               size="mini"
@@ -99,6 +113,111 @@
         </div>
       </div>
     </div>
+
+    <!-- 品质选择弹窗 -->
+    <van-popup v-model:show="showQualitySelector" position="bottom" round>
+      <div class="selector-popup">
+        <div class="selector-header">
+          <span class="selector-title">选择品质</span>
+          <button class="selector-cancel" @click="showQualitySelector = false">取消</button>
+        </div>
+        <div class="selector-body">
+          <van-checkbox-group v-model="selectedQualities">
+            <van-cell-group inset>
+              <van-cell
+                v-for="quality in availableQualities"
+                :key="quality.value"
+                clickable
+                @click="toggleQuality(quality.value)"
+              >
+                <template #title>
+                  <span>{{ quality.label }} ({{ quality.count }}件)</span>
+                </template>
+                <template #right-icon>
+                  <van-checkbox
+                    :name="quality.value"
+                    @click.stop
+                  />
+                </template>
+              </van-cell>
+            </van-cell-group>
+          </van-checkbox-group>
+        </div>
+        <div class="selector-footer">
+          <button class="btn-confirm" @click="confirmQualitySelection">确定</button>
+        </div>
+      </div>
+    </van-popup>
+
+    <!-- 稀有度选择弹窗 -->
+    <van-popup v-model:show="showRaritySelector" position="bottom" round>
+      <div class="selector-popup">
+        <div class="selector-header">
+          <span class="selector-title">选择稀有度</span>
+          <button class="selector-cancel" @click="showRaritySelector = false">取消</button>
+        </div>
+        <div class="selector-body">
+          <van-checkbox-group v-model="selectedRarities">
+            <van-cell-group inset>
+              <van-cell
+                v-for="rarity in availableRarities"
+                :key="rarity.value"
+                clickable
+                @click="toggleRarity(rarity.value)"
+              >
+                <template #title>
+                  <span>{{ rarity.label }} ({{ rarity.count }}件)</span>
+                </template>
+                <template #right-icon>
+                  <van-checkbox
+                    :name="rarity.value"
+                    @click.stop
+                  />
+                </template>
+              </van-cell>
+            </van-cell-group>
+          </van-checkbox-group>
+        </div>
+        <div class="selector-footer">
+          <button class="btn-confirm" @click="confirmRaritySelection">确定</button>
+        </div>
+      </div>
+    </van-popup>
+
+    <!-- 需求等级选择弹窗 -->
+    <van-popup v-model:show="showRealmSelector" position="bottom" round>
+      <div class="selector-popup">
+        <div class="selector-header">
+          <span class="selector-title">选择需求境界</span>
+          <button class="selector-cancel" @click="showRealmSelector = false">取消</button>
+        </div>
+        <div class="selector-body">
+          <van-checkbox-group v-model="selectedRealms">
+            <van-cell-group inset>
+              <van-cell
+                v-for="realm in availableRealms"
+                :key="realm.value"
+                clickable
+                @click="toggleRealm(realm.value)"
+              >
+                <template #title>
+                  <span>{{ realm.label }} ({{ realm.count }}件)</span>
+                </template>
+                <template #right-icon>
+                  <van-checkbox
+                    :name="realm.value"
+                    @click.stop
+                  />
+                </template>
+              </van-cell>
+            </van-cell-group>
+          </van-checkbox-group>
+        </div>
+        <div class="selector-footer">
+          <button class="btn-confirm" @click="confirmRealmSelection">确定</button>
+        </div>
+      </div>
+    </van-popup>
   </div>
 </template>
 
@@ -116,6 +235,88 @@ const player = computed(() => gameStore.player)
 
 // 批量售出相关状态
 const selectedEquipments = ref<Equipment[]>([])
+
+// 品质/稀有度/需求境界选择器状态
+const showQualitySelector = ref(false)
+const showRaritySelector = ref(false)
+const showRealmSelector = ref(false)
+const selectedQualities = ref<string[]>([])
+const selectedRarities = ref<string[]>([])
+const selectedRealms = ref<string[]>([])
+
+// 可用品质列表（按需求境界+品质组合统计）
+const availableQualities = computed(() => {
+  if (!player.value?.inventory.equipments.length) return []
+
+  const qualityGroups: Record<string, number> = {}
+  player.value.inventory.equipments.forEach(eq => {
+    // 组合键：需求境界-品质
+    const key = `${eq.requireRealm}-${eq.requireRealmLevel}-${eq.quality}`
+    qualityGroups[key] = (qualityGroups[key] || 0) + 1
+  })
+
+  return Object.entries(qualityGroups).map(([key, count]) => {
+    const parts = key.split('-')
+    const realmIndex = parts[0]
+    const realmLevel = parts[1]
+    const quality = parts.slice(2).join('-') // 处理品质名称可能包含'-'的情况
+    const realmName = getRealmName(Number(realmIndex))
+
+    return {
+      label: `${realmName}${realmLevel}层-${quality}`,
+      value: key,
+      count
+    }
+  })
+})
+
+// 可用稀有度列表（按需求境界+稀有度组合统计）
+const availableRarities = computed(() => {
+  if (!player.value?.inventory.equipments.length) return []
+
+  const rarityGroups: Record<string, number> = {}
+  player.value.inventory.equipments.forEach(eq => {
+    // 组合键：需求境界-稀有度
+    const key = `${eq.requireRealm}-${eq.requireRealmLevel}-${eq.rarity}`
+    rarityGroups[key] = (rarityGroups[key] || 0) + 1
+  })
+
+  return Object.entries(rarityGroups).map(([key, count]) => {
+    const parts = key.split('-')
+    const realmIndex = parts[0]
+    const realmLevel = parts[1]
+    const rarity = parts.slice(2).join('-') // 处理稀有度名称可能包含'-'的情况
+    const realmName = getRealmName(Number(realmIndex))
+
+    return {
+      label: `${realmName}${realmLevel}层-${rarity}`,
+      value: key,
+      count
+    }
+  })
+})
+
+// 可用需求境界列表（带数量统计）
+const availableRealms = computed(() => {
+  if (!player.value?.inventory.equipments.length) return []
+
+  const realmGroups: Record<string, number> = {}
+  player.value.inventory.equipments.forEach(eq => {
+    const realmKey = `${eq.requireRealm}-${eq.requireRealmLevel}`
+    const realmName = `${getRealmName(eq.requireRealm)} ${eq.requireRealmLevel}层`
+    realmGroups[realmKey] = (realmGroups[realmKey] || 0) + 1
+  })
+
+  return Object.entries(realmGroups).map(([key, count]) => {
+    const [realmIndex, realmLevel] = key.split('-')
+    const realmName = `${getRealmName(Number(realmIndex))} ${realmLevel}层`
+    return {
+      label: realmName,
+      value: key,
+      count
+    }
+  })
+})
 
 // 是否全选
 const isAllSelected = computed(() => {
@@ -155,29 +356,326 @@ function handleSelectAll() {
   }
 }
 
-// 批量出售
-async function handleBatchSell() {
-  if (selectedEquipments.value.length === 0) {
-    UI.toast({ title: '请先选择要出售的装备', icon: 'none' })
+
+// 按品质批量出售
+async function handleBatchSellByQuality() {
+  if (!player.value?.inventory.equipments.length) {
+    UI.toast({ title: '背包中没有装备', icon: 'none' })
+    return
+  }
+
+  // 直接打开品质选择器
+  selectedQualities.value = []
+  showQualitySelector.value = true
+}
+
+// 按稀有度批量出售
+async function handleBatchSellByRarity() {
+  if (!player.value?.inventory.equipments.length) {
+    UI.toast({ title: '背包中没有装备', icon: 'none' })
+    return
+  }
+
+  // 直接打开稀有度选择器
+  selectedRarities.value = []
+  showRaritySelector.value = true
+}
+
+// 按需求境界批量出售
+async function handleBatchSellByRealm() {
+  if (!player.value?.inventory.equipments.length) {
+    UI.toast({ title: '背包中没有装备', icon: 'none' })
+    return
+  }
+
+  // 直接打开需求境界选择器
+  selectedRealms.value = []
+  showRealmSelector.value = true
+}
+
+// 切换品质选择
+function toggleQuality(quality: string) {
+  const index = selectedQualities.value.indexOf(quality)
+  if (index > -1) {
+    selectedQualities.value.splice(index, 1)
+  } else {
+    selectedQualities.value.push(quality)
+  }
+}
+
+// 切换稀有度选择
+function toggleRarity(rarity: string) {
+  const index = selectedRarities.value.indexOf(rarity)
+  if (index > -1) {
+    selectedRarities.value.splice(index, 1)
+  } else {
+    selectedRarities.value.push(rarity)
+  }
+}
+
+// 切换需求境界选择
+function toggleRealm(realm: string) {
+  const index = selectedRealms.value.indexOf(realm)
+  if (index > -1) {
+    selectedRealms.value.splice(index, 1)
+  } else {
+    selectedRealms.value.push(realm)
+  }
+}
+
+// 确认品质选择并出售
+async function confirmQualitySelection() {
+  if (selectedQualities.value.length === 0) {
+    UI.toast({ title: '请至少选择一个品质', icon: 'none' })
+    return
+  }
+
+  showQualitySelector.value = false
+
+  // 筛选出符合条件的装备（根据需求境界+品质组合）
+  const equipments = player.value!.inventory.equipments.filter(eq => {
+    const key = `${eq.requireRealm}-${eq.requireRealmLevel}-${eq.quality}`
+    return selectedQualities.value.includes(key)
+  })
+
+  if (equipments.length === 0) {
+    UI.toast({ title: '没有符合条件的装备', icon: 'none' })
+    return
+  }
+
+  // 构建选择的条件描述
+  const criteriaList = selectedQualities.value.map(key => {
+    const parts = key.split('-')
+    const realmIndex = parts[0]
+    const realmLevel = parts[1]
+    const quality = parts.slice(2).join('-') // 处理品质名称可能包含'-'的情况
+    const realmName = getRealmName(Number(realmIndex))
+    return `${realmName}${realmLevel}层-${quality}`
+  })
+
+  const criteria = `品质: ${criteriaList.join('、')}`
+  await confirmAndSellEquipments(equipments, criteria)
+}
+
+// 确认稀有度选择并出售
+async function confirmRaritySelection() {
+  if (selectedRarities.value.length === 0) {
+    UI.toast({ title: '请至少选择一个稀有度', icon: 'none' })
+    return
+  }
+
+  showRaritySelector.value = false
+
+  // 筛选出符合条件的装备（根据需求境界+稀有度组合）
+  const equipments = player.value!.inventory.equipments.filter(eq => {
+    const key = `${eq.requireRealm}-${eq.requireRealmLevel}-${eq.rarity}`
+    return selectedRarities.value.includes(key)
+  })
+
+  if (equipments.length === 0) {
+    UI.toast({ title: '没有符合条件的装备', icon: 'none' })
+    return
+  }
+
+  // 构建选择的条件描述
+  const criteriaList = selectedRarities.value.map(key => {
+    const parts = key.split('-')
+    const realmIndex = parts[0]
+    const realmLevel = parts[1]
+    const rarity = parts.slice(2).join('-') // 处理稀有度名称可能包含'-'的情况
+    const realmName = getRealmName(Number(realmIndex))
+    return `${realmName}${realmLevel}层-${rarity}`
+  })
+
+  const criteria = `稀有度: ${criteriaList.join('、')}`
+  await confirmAndSellEquipments(equipments, criteria)
+}
+
+// 确认需求境界选择并出售
+async function confirmRealmSelection() {
+  if (selectedRealms.value.length === 0) {
+    UI.toast({ title: '请至少选择一个需求境界', icon: 'none' })
+    return
+  }
+
+  showRealmSelector.value = false
+
+  // 筛选出符合条件的装备
+  const equipments = player.value!.inventory.equipments.filter(eq => {
+    const realmKey = `${eq.requireRealm}-${eq.requireRealmLevel}`
+    return selectedRealms.value.includes(realmKey)
+  })
+
+  if (equipments.length === 0) {
+    UI.toast({ title: '没有符合条件的装备', icon: 'none' })
+    return
+  }
+
+  // 构建境界��称列表
+  const realmNames = selectedRealms.value.map(key => {
+    const [realmIndex, realmLevel] = key.split('-')
+    return `${getRealmName(Number(realmIndex))} ${realmLevel}层`
+  })
+
+  const criteria = `需求境界: ${realmNames.join('、')}`
+  await confirmAndSellEquipments(equipments, criteria)
+}
+
+// 按品质选择出售（旧版本 - 保留作为备用）
+async function selectByQuality() {
+  // 统计背包中的品质分布
+  const qualityGroups: Record<string, Equipment[]> = {}
+  player.value?.inventory.equipments.forEach(eq => {
+    if (!qualityGroups[eq.quality]) {
+      qualityGroups[eq.quality] = []
+    }
+    qualityGroups[eq.quality].push(eq)
+  })
+
+  // 构建品质列表信息
+  const qualityList = Object.entries(qualityGroups)
+    .map(([quality, eqs]) => `${quality}: ${eqs.length}件`)
+    .join('\n')
+
+  const selectRes = await UI.modal({
+    title: '选择品质',
+    content: `背包中的装备品质分布:\n${qualityList}\n\n选择要出售的品质`,
+    confirmText: '下品',
+    cancelText: '中品'
+  })
+
+  let selectedQuality = ''
+  if (selectRes.confirm) {
+    selectedQuality = '下品'
+  } else if (selectRes.cancel) {
+    // 继续选择上品或极品
+    const selectRes2 = await UI.modal({
+      title: '选择品质',
+      content: `背包中的装��品质分布:\n${qualityList}\n\n选择要出售的品质`,
+      confirmText: '上品',
+      cancelText: '极品'
+    })
+
+    if (selectRes2.confirm) {
+      selectedQuality = '上品'
+    } else if (selectRes2.cancel) {
+      selectedQuality = '极品'
+    }
+  }
+
+  if (selectedQuality && qualityGroups[selectedQuality]) {
+    await confirmAndSellEquipments(qualityGroups[selectedQuality], `品质: ${selectedQuality}`)
+  }
+}
+
+// 按稀有度选择出售（旧版本 - 保留作为备用）
+async function selectByRarity() {
+  // 统计背包中的稀有度分布
+  const rarityGroups: Record<string, Equipment[]> = {}
+  player.value?.inventory.equipments.forEach(eq => {
+    if (!rarityGroups[eq.rarity]) {
+      rarityGroups[eq.rarity] = []
+    }
+    rarityGroups[eq.rarity].push(eq)
+  })
+
+  // 构建稀有度列表信息
+  const rarityList = Object.entries(rarityGroups)
+    .map(([rarity, eqs]) => `${rarity}: ${eqs.length}件`)
+    .join('\n')
+
+  const selectRes = await UI.modal({
+    title: '选择稀有度',
+    content: `背包中的装备稀有度分布:\n${rarityList}\n\n选择要出售的稀有度（点击确定继续选择）`,
+    confirmText: '继续选择',
+    cancelText: '取消'
+  })
+
+  if (!selectRes.confirm) return
+
+  // 让用户从可用的稀有度中选择
+  const availableRarities = Object.keys(rarityGroups)
+  if (availableRarities.length === 0) return
+
+  // 分批展示稀有度选项
+  let selectedRarity = ''
+
+  // 第一批：凡品、黄品
+  if (rarityGroups['凡品'] || rarityGroups['黄品']) {
+    const res1 = await UI.modal({
+      title: '选择稀有度',
+      content: rarityList,
+      confirmText: rarityGroups['凡品'] ? '凡品' : '下一页',
+      cancelText: rarityGroups['黄品'] ? '黄品' : '下一页'
+    })
+
+    if (res1.confirm && rarityGroups['凡品']) {
+      selectedRarity = '凡品'
+    } else if (res1.cancel && rarityGroups['黄品']) {
+      selectedRarity = '黄品'
+    }
+  }
+
+  // 如果还没选择，继续第二批：玄品、地品
+  if (!selectedRarity && (rarityGroups['玄品'] || rarityGroups['地品'])) {
+    const res2 = await UI.modal({
+      title: '选择稀有度',
+      content: rarityList,
+      confirmText: rarityGroups['玄品'] ? '玄品' : '下一页',
+      cancelText: rarityGroups['地品'] ? '地品' : '下一页'
+    })
+
+    if (res2.confirm && rarityGroups['玄品']) {
+      selectedRarity = '玄品'
+    } else if (res2.cancel && rarityGroups['地品']) {
+      selectedRarity = '地品'
+    }
+  }
+
+  // 如果还没选择，继续第三批：天品、仙品
+  if (!selectedRarity && (rarityGroups['天品'] || rarityGroups['仙品'])) {
+    const res3 = await UI.modal({
+      title: '选择稀有度',
+      content: rarityList,
+      confirmText: rarityGroups['天品'] ? '天品' : '下一页',
+      cancelText: rarityGroups['仙品'] ? '仙品' : '下一页'
+    })
+
+    if (res3.confirm && rarityGroups['天品']) {
+      selectedRarity = '天品'
+    } else if (res3.cancel && rarityGroups['仙品']) {
+      selectedRarity = '仙品'
+    }
+  }
+
+  if (selectedRarity && rarityGroups[selectedRarity]) {
+    await confirmAndSellEquipments(rarityGroups[selectedRarity], `稀有度: ${selectedRarity}`)
+  }
+}
+
+// 确认并出售装备
+async function confirmAndSellEquipments(equipments: Equipment[], criteria: string) {
+  if (equipments.length === 0) {
+    UI.toast({ title: '没有符合条件的装备', icon: 'none' })
     return
   }
 
   // 计算总售价
-  const totalPrice = selectedEquipments.value.reduce((sum, eq) => {
+  const totalPrice = equipments.reduce((sum, eq) => {
     return sum + calculateEquipmentSellPrice(eq)
   }, 0)
 
-  // 构建确认信息
-  const rarityGroups: Record<string, number> = {}
-  selectedEquipments.value.forEach(eq => {
-    rarityGroups[eq.rarity] = (rarityGroups[eq.rarity] || 0) + 1
+  // 按品质分组统计
+  const qualityGroups: Record<string, number> = {}
+  equipments.forEach(eq => {
+    qualityGroups[eq.quality] = (qualityGroups[eq.quality] || 0) + 1
   })
 
-  const groupInfo = Object.entries(rarityGroups)
-    .map(([rarity, count]) => `${rarity}×${count}`)
+  const groupInfo = Object.entries(qualityGroups)
+    .map(([quality, count]) => `${quality}×${count}`)
     .join('、')
 
-  const content = `共选择 ${selectedEquipments.value.length} 件装备\n${groupInfo}\n\n总售价: ${gameStore.formatNumber(totalPrice)} 灵石`
+  const content = `${criteria}\n共 ${equipments.length} 件装备\n${groupInfo}\n\n总售价: ${gameStore.formatNumber(totalPrice)} 灵石`
 
   const res = await UI.modal({
     title: '批量出售确认',
@@ -187,16 +685,10 @@ async function handleBatchSell() {
   })
 
   if (res.confirm) {
-    // 执行批量出售
-    const count = selectedEquipments.value.length
     let totalSellPrice = 0
-
-    selectedEquipments.value.forEach(eq => {
+    equipments.forEach(eq => {
       totalSellPrice += gameStore.sellEquipment(eq)
     })
-
-    // 清空选择
-    selectedEquipments.value = []
 
     UI.toast({
       title: `出售成功！获得${gameStore.formatNumber(totalSellPrice)}灵石`,
@@ -279,7 +771,8 @@ async function handleSlotClick(slot: string) {
       .map(([key, value]) => `${getAttrName(key)}+${formatAttrValue(key, value as number)}`)
       .join('\n')
 
-    const details = `${getEquipmentFullName(equipped)}\n` +
+    const enhanceText = equipped.enhanceLevel ? ` +${equipped.enhanceLevel}` : ''
+    const details = `${getEquipmentFullName(equipped)}${enhanceText}\n` +
       `等级: Lv.${equipped.level}\n` +
       `稀有度: ${equipped.rarity}\n` +
       `品质: ${equipped.quality}\n` +
@@ -289,11 +782,15 @@ async function handleSlotClick(slot: string) {
     const res = await UI.modal({
       title: '装备详情',
       content: details,
-      confirmText: '卸下',
-      cancelText: '取消'
+      confirmText: '强化',
+      cancelText: '卸下'
     })
 
     if (res.confirm && player.value) {
+      // 点击强化按钮
+      await handleEnhanceClick(equipped)
+    } else if (res.cancel && player.value) {
+      // 点击卸下按钮
       // 检查背包容量
       if (player.value.inventory.equipments.length >= player.value.inventory.maxSize) {
         UI.toast({ title: '背包已满', icon: 'none' })
@@ -385,7 +882,7 @@ async function showEquipCompareDialog(newEquipment: Equipment, currentEquipment:
     title: '装备对比',
     content,
     confirmText: '装备',
-    cancelText: '取消'
+    cancelText: '更多操作'
   })
 
   if (res.confirm) {
@@ -402,6 +899,63 @@ async function showEquipCompareDialog(newEquipment: Equipment, currentEquipment:
 
     gameStore.saveGame()
     UI.toast({ title: '装备成功', icon: 'success' })
+  } else if (res.cancel) {
+    // 显示更多操作菜单
+    const actionRes = await UI.modal({
+      title: '选择操作',
+      content: '请选择要进行的操作',
+      confirmText: '强化',
+      cancelText: '出售'
+    })
+
+    if (actionRes.confirm) {
+      // 强化
+      await handleEnhanceClick(newEquipment)
+    } else if (actionRes.cancel) {
+      // 出售
+      await handleSellClick(newEquipment)
+    }
+  }
+}
+
+async function handleEnhanceClick(equipment: Equipment) {
+  if (!player.value) return
+
+  // 获取强化消耗
+  const cost = gameStore.getEnhanceCost(equipment)
+  const currentLevel = equipment.enhanceLevel || 0
+
+  // 构建装备信息
+  const attrs = Object.entries(equipment.attributes)
+    .map(([key, value]) => `${getAttrName(key)}+${formatAttrValue(key, value as number)}`)
+    .join('\n')
+
+  const enhanceText = currentLevel > 0 ? ` +${currentLevel}` : ''
+  const details = `${getEquipmentFullName(equipment)}${enhanceText}\n` +
+    `等级: Lv.${equipment.level}\n` +
+    `稀有度: ${equipment.rarity}\n` +
+    `品质: ${equipment.quality}\n` +
+    `\n当前属性:\n${attrs}\n` +
+    `\n强化消耗:\n` +
+    `强化石: ${cost.stoneCost} (拥有: ${player.value.resources.enhanceStone || 0})\n` +
+    `灵石: ${gameStore.formatNumber(cost.lingStoneCost)} (拥有: ${gameStore.formatNumber(player.value.resources.lingStone)})\n` +
+    `成功率: ${(cost.successRate * 100).toFixed(1)}%\n` +
+    `\n提示: 强化成功后装备属性提升5%`
+
+  const res = await UI.modal({
+    title: '装备强化',
+    content: details,
+    confirmText: '强化',
+    cancelText: '取消'
+  })
+
+  if (res.confirm) {
+    const result = gameStore.enhanceEquipment(equipment)
+    UI.toast({
+      title: result.message,
+      icon: result.success ? 'success' : 'none',
+      duration: 2000
+    })
   }
 }
 
@@ -475,7 +1029,10 @@ async function handleSellClick(equipment: Equipment) {
 }
 
 .btn-select-all,
-.btn-batch-sell {
+.btn-batch-sell,
+.btn-batch-sell-by-quality,
+.btn-batch-sell-by-rarity,
+.btn-batch-sell-by-realm {
   font-size: 11px;
   padding: 6px 10px;
   min-width: 50px;
@@ -488,6 +1045,18 @@ async function handleSellClick(equipment: Equipment) {
 
 .btn-select-all {
   background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+}
+
+.btn-batch-sell-by-quality {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+}
+
+.btn-batch-sell-by-rarity {
+  background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+}
+
+.btn-batch-sell-by-realm {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
 }
 
 .btn-batch-sell {
@@ -676,6 +1245,7 @@ async function handleSellClick(equipment: Equipment) {
   flex-shrink: 0;
 }
 
+.btn-enhance,
 .btn-equip,
 .btn-sell {
   color: white;
@@ -690,6 +1260,15 @@ async function handleSellClick(equipment: Equipment) {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
   cursor: pointer;
   line-height: 1.2;
+}
+
+.btn-enhance {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+}
+
+.btn-enhance:active {
+  opacity: 0.8;
+  transform: scale(0.95);
 }
 
 .btn-equip {
@@ -721,6 +1300,67 @@ async function handleSellClick(equipment: Equipment) {
   color: #999;
   padding: 40px 0;
   font-size: 11px;
+}
+
+/* 品质/稀有度选择器弹窗样式 */
+.selector-popup {
+  background: white;
+  border-radius: 16px 16px 0 0;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.selector-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #1a1a2e;
+}
+
+.selector-cancel {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.selector-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.selector-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.btn-confirm {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #f4a460 0%, #ff8c42 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(244, 164, 96, 0.3);
+}
+
+.btn-confirm:active {
+  opacity: 0.8;
+  transform: scale(0.98);
 }
 
 </style>

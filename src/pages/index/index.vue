@@ -15,6 +15,10 @@
           <span class="icon" >✨</span>
           <span>{{ gameStore.player?.resources.comprehensionPoint || 0 }}</span>
         </div>
+        <div class="resource-item">
+          <span class="icon">🔨</span>
+          <span>{{ gameStore.player?.resources.enhanceStone || 0 }}</span>
+        </div>
       </div>
     </div>
 

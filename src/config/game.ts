@@ -152,6 +152,7 @@ export const MAPS: MapConfig[] = [
     requireRealm: 0,
     requireRealmLevel: 1,
     monsters: ['slime', 'wolf', 'goblin'],
+    description: ''
   },
   {
     id: 'spirit_valley',
@@ -159,6 +160,7 @@ export const MAPS: MapConfig[] = [
     requireRealm: 0,
     requireRealmLevel: 5,
     monsters: ['spirit_deer', 'fire_fox', 'stone_golem'],
+    description: ''
   },
   {
     id: 'dark_cave',
@@ -166,6 +168,7 @@ export const MAPS: MapConfig[] = [
     requireRealm: 1,
     requireRealmLevel: 1,
     monsters: ['bat_demon', 'cave_spider', 'skeleton'],
+    description: ''
   },
   {
     id: 'misty_mountain',
@@ -173,6 +176,7 @@ export const MAPS: MapConfig[] = [
     requireRealm: 1,
     requireRealmLevel: 5,
     monsters: ['cloud_beast', 'thunder_eagle', 'mountain_tiger'],
+    description: ''
   },
   {
     id: 'blood_plain',
@@ -180,6 +184,7 @@ export const MAPS: MapConfig[] = [
     requireRealm: 2,
     requireRealmLevel: 1,
     monsters: ['blood_wolf', 'demon_warrior', 'cursed_knight'],
+    description: ''
   },
   {
     id: 'ice_wasteland',
@@ -187,6 +192,7 @@ export const MAPS: MapConfig[] = [
     requireRealm: 2,
     requireRealmLevel: 5,
     monsters: ['frost_giant', 'ice_dragon', 'snow_demon'],
+    description: ''
   },
   {
     id: 'heaven_realm',
@@ -194,6 +200,7 @@ export const MAPS: MapConfig[] = [
     requireRealm: 7,
     requireRealmLevel: 1,
     monsters: ['heaven_guard', 'divine_beast', 'immortal_general'],
+    description: ''
   },
 ]
 
@@ -223,7 +230,7 @@ export const MONSTERS: MonsterConfig[] = [
     dropTable: {
       lingStone: [1, 3],
       experience: [5, 10],
-      equipmentRate: 0.01,
+      equipmentRate: 0.05, // 固定5%爆率
       skillBookRate: 0.001,
     },
   },
@@ -250,7 +257,7 @@ export const MONSTERS: MonsterConfig[] = [
     dropTable: {
       lingStone: [3, 8],
       experience: [10, 20],
-      equipmentRate: 0.02,
+      equipmentRate: 0.05, // 固定5%爆率
       skillBookRate: 0.002,
     },
   },
@@ -277,7 +284,7 @@ export const MONSTERS: MonsterConfig[] = [
     dropTable: {
       lingStone: [8, 15],
       experience: [20, 35],
-      equipmentRate: 0.03,
+      equipmentRate: 0.05, // 固定5%爆率
       skillBookRate: 0.005,
     },
   },
@@ -305,7 +312,7 @@ export const MONSTERS: MonsterConfig[] = [
     dropTable: {
       lingStone: [15, 30],
       experience: [40, 60],
-      equipmentRate: 0.05,
+      equipmentRate: 0.05, // 固定5%爆率
       skillBookRate: 0.01,
     },
   },
@@ -332,7 +339,7 @@ export const MONSTERS: MonsterConfig[] = [
     dropTable: {
       lingStone: [25, 50],
       experience: [60, 90],
-      equipmentRate: 0.08,
+      equipmentRate: 0.05, // 固定5%爆率
       skillBookRate: 0.015,
     },
   },
@@ -342,7 +349,7 @@ export const MONSTERS: MonsterConfig[] = [
  * 打坐修炼速度配置
  */
 export const MEDITATION_SPEED = {
-  baseRate: 100000000000, // 基础修为获取速度 (每秒)
+  baseRate: 100000, // 基础修为获取速度 (每秒)
   realmMultiplier: 0.5, // 境界倍率系数 (每个境界增加50%)
   interval: 1000, // 修炼间隔(毫秒)
 }
@@ -371,8 +378,8 @@ export const OFFLINE_CONFIG = {
  */
 export const DROP_CONFIG = {
   // 装备掉落基础概率 (会根据怪物等级调整)
-  equipmentBaseRate: 0.5, // 5%基础掉率
-  equipmentRatePerLevel: 0.01, // 每级增加1%掉率
+  equipmentBaseRate: 0.05, // 5%基础掉率
+  equipmentRatePerLevel: 0.0002, // 每级增加1%掉率
 
   // 技能书掉落基础概率
   skillBookBaseRate: 0.01, // 1%基础掉率
