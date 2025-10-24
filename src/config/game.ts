@@ -20,10 +20,10 @@ export const REALMS: RealmConfig[] = [
     breakthroughCost: 5000,
     breakthroughSuccessRate: 0.9,
     attributeBonus: {
-      hpMax: 100,
-      attack: 10,
-      defense: 5,
-      speed: 5,
+      hpMax: 10,
+      attack: 1,
+      defense: 0.5,
+      speed: 0.5,
     },
   },
   {
@@ -34,10 +34,10 @@ export const REALMS: RealmConfig[] = [
     breakthroughCost: 30000,
     breakthroughSuccessRate: 0.7,
     attributeBonus: {
-      hpMax: 300,
-      attack: 30,
-      defense: 15,
-      speed: 10,
+      hpMax: 30,
+      attack: 3,
+      defense: 1.5,
+      speed: 1,
     },
   },
   {
@@ -48,10 +48,10 @@ export const REALMS: RealmConfig[] = [
     breakthroughCost: 150000,
     breakthroughSuccessRate: 0.5,
     attributeBonus: {
-      hpMax: 800,
-      attack: 80,
-      defense: 40,
-      speed: 20,
+      hpMax: 80,
+      attack: 8,
+      defense: 4,
+      speed: 2,
     },
   },
   {
@@ -62,10 +62,10 @@ export const REALMS: RealmConfig[] = [
     breakthroughCost: 800000,
     breakthroughSuccessRate: 0.3,
     attributeBonus: {
-      hpMax: 2000,
-      attack: 200,
-      defense: 100,
-      speed: 30,
+      hpMax: 200,
+      attack: 20,
+      defense: 10,
+      speed: 3,
     },
   },
   {
@@ -76,10 +76,10 @@ export const REALMS: RealmConfig[] = [
     breakthroughCost: 5000000,
     breakthroughSuccessRate: 0.2,
     attributeBonus: {
-      hpMax: 5000,
-      attack: 500,
-      defense: 250,
-      speed: 40,
+      hpMax: 500,
+      attack: 50,
+      defense: 25,
+      speed: 4,
     },
   },
   {
@@ -90,10 +90,10 @@ export const REALMS: RealmConfig[] = [
     breakthroughCost: 20000000,
     breakthroughSuccessRate: 0.15,
     attributeBonus: {
-      hpMax: 12000,
-      attack: 1200,
-      defense: 600,
-      speed: 50,
+      hpMax: 1200,
+      attack: 120,
+      defense: 60,
+      speed: 5,
     },
   },
   {
@@ -104,10 +104,10 @@ export const REALMS: RealmConfig[] = [
     breakthroughCost: 100000000,
     breakthroughSuccessRate: 0.1,
     attributeBonus: {
-      hpMax: 30000,
-      attack: 3000,
-      defense: 1500,
-      speed: 60,
+      hpMax: 3000,
+      attack: 300,
+      defense: 150,
+      speed: 6,
     },
   },
   {
@@ -118,10 +118,10 @@ export const REALMS: RealmConfig[] = [
     breakthroughCost: 500000000,
     breakthroughSuccessRate: 0.05,
     attributeBonus: {
-      hpMax: 80000,
-      attack: 8000,
-      defense: 4000,
-      speed: 80,
+      hpMax: 8000,
+      attack: 800,
+      defense: 400,
+      speed: 8,
     },
   },
   {
@@ -132,10 +132,10 @@ export const REALMS: RealmConfig[] = [
     breakthroughCost: 0,
     breakthroughSuccessRate: 1,
     attributeBonus: {
-      hpMax: 200000,
-      attack: 20000,
-      defense: 10000,
-      speed: 100,
+      hpMax: 20000,
+      attack: 2000,
+      defense: 1000,
+      speed: 10,
     },
   },
 ]
@@ -374,16 +374,14 @@ export const OFFLINE_CONFIG = {
 }
 
 /**
- * 掉落配置
+ * 掉落配置 - 全局掉落概率配置
  */
 export const DROP_CONFIG = {
-  // 装备掉落基础概率 (会根据怪物等级调整)
-  equipmentBaseRate: 0.05, // 5%基础掉率
-  equipmentRatePerLevel: 0.0002, // 每级增加1%掉率
+  // 普通怪物装备掉落概率（Boss必爆，不受此影响）
+  equipmentBaseRate: 0.5, // 5%基础掉率
 
-  // 技能书掉落基础概率
+  // 普通怪物技能书掉落概率（Boss必爆，不受此影响）
   skillBookBaseRate: 0.01, // 1%基础掉率
-  skillBookRatePerLevel: 0.005, // 每级增加0.5%掉率
 
   // 主动/被动技能掉落比例
   activeSkillRate: 0.6, // 60%概率掉落主动技能
@@ -412,6 +410,23 @@ export const EQUIPMENT_SELL_CONFIG = {
   },
   levelBonus: 5,      // 每级增加的灵石
   enhanceBonus: 20    // 每强化等级增加的灵石
+}
+
+/**
+ * 技能书售价配置
+ * 基础价格根据稀有度
+ */
+export const SKILL_SELL_CONFIG = {
+  rarityMultipliers: {
+    '黄阶': 100,
+    '玄阶': 500,
+    '地阶': 2000,
+    '天阶': 8000,
+    '仙阶': 30000,
+    '神阶': 120000,
+  },
+  // 售价为学习消耗的50%
+  sellRatio: 0.5
 }
 
 /**

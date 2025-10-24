@@ -13,6 +13,7 @@
           <div v-if="player?.equipment[key]" class="equipped">
             <div class="eq-name" :class="`rarity-${player.equipment[key]?.rarity}`">
               {{ getEquipmentFullName(player.equipment[key]!) }}
+              <span v-if="player.equipment[key]?.enhanceLevel && player.equipment[key]!.enhanceLevel > 0" class="enhance-level">+{{ player.equipment[key]?.enhanceLevel }}</span>
             </div>
             <div class="eq-level">Lv.{{ player.equipment[key]?.level }}</div>
           </div>

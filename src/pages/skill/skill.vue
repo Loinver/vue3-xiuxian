@@ -81,10 +81,18 @@
             <div class="skill-cost">
               学习消耗: {{ skill.learnCost.lingStone }}灵石
             </div>
+            <div class="skill-price">
+              售价: {{ Math.floor(skill.learnCost.lingStone * 0.5) }} 灵石
+            </div>
           </div>
-          <button class="btn-learn" size="mini" @click="handleLearn(skill)">
-            学习
-          </button>
+          <div class="btn-group">
+            <button class="btn-learn" size="mini" @click="handleLearn(skill)">
+              学习
+            </button>
+            <button class="btn-sell" size="mini" @click="handleSell(skill)">
+              出售
+            </button>
+          </div>
         </div>
         <div v-if="!player?.inventory.skillBooks.length" class="empty-tip">
           没有技能书
@@ -189,6 +197,28 @@ function handleLearn(skill: Skill) {
   player.value.inventory.skillBooks.splice(index, 1)
 
   gameStore.saveGame()
+}
+
+async function handleSell(skill: Skill) {
+  if (!player.value) return
+
+  const sellPrice = Math.floor(skill.learnCost.lingStone * 0.5)
+
+  const res = await UI.modal({
+    title: '确认出售',
+    content: `确定要出售《${skill.name}》吗？\n\n售价: ${gameStore.formatNumber(sellPrice)} 灵石`,
+    confirmText: '出售',
+    cancelText: '取消'
+  })
+
+  if (res.confirm) {
+    const price = gameStore.sellSkill(skill)
+    UI.toast({
+      title: `出售成功,获得${gameStore.formatNumber(price)}灵石`,
+      icon: 'success',
+      duration: 2000
+    })
+  }
 }
 
 async function handleUpgrade(skill: Skill) {
@@ -392,9 +422,27 @@ async function handleUpgrade(skill: Skill) {
   margin-top: 3px;
 }
 
+.skill-price {
+  font-size: 11px;
+  color: #52c41a;
+  font-weight: 500;
+  background: rgba(82, 196, 26, 0.1);
+  padding: 2px 5px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-top: 3px;
+}
+
+.btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
 
 .btn-upgrade,
-.btn-learn {
+.btn-learn,
+.btn-sell {
   color: white;
   border: none;
   padding: 8px 14px;
@@ -403,7 +451,6 @@ async function handleUpgrade(skill: Skill) {
   font-size: 12px;
   font-weight: 500;
   transition: all 0.3s;
-  box-shadow: 0 1px 4px rgba(82, 196, 26, 0.3);
   flex-shrink: 0;
   cursor: pointer;
   line-height: 1.2;
@@ -411,6 +458,7 @@ async function handleUpgrade(skill: Skill) {
 
 .btn-upgrade {
   background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  box-shadow: 0 1px 4px rgba(82, 196, 26, 0.3);
 }
 
 .btn-learn {
@@ -418,8 +466,14 @@ async function handleUpgrade(skill: Skill) {
   box-shadow: 0 1px 4px rgba(24, 144, 255, 0.3);
 }
 
+.btn-sell {
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+  box-shadow: 0 1px 4px rgba(108, 117, 125, 0.3);
+}
+
 .btn-upgrade:active,
-.btn-learn:active {
+.btn-learn:active,
+.btn-sell:active {
   opacity: 0.8;
   transform: scale(0.95);
 }

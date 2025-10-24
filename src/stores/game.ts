@@ -135,8 +135,8 @@ export const useGameStore = defineStore('game', () => {
         breakthroughFailCount: 0
       },
       attributes: {
-        hp: 500, hpMax: 500, mp: 100, mpMax: 100,
-        attack: 50, defense: 30, speed: 40,
+        hp: 80, hpMax: 80, mp: 20, mpMax: 20,
+        attack: 8, defense: 4, speed: 6,
         critRate: 0.05, critDamage: 1.5, dodge: 0.03, block: 0.02
       },
       resources: {
@@ -446,8 +446,8 @@ export const useGameStore = defineStore('game', () => {
       const skill = generateSkill(skillType, player.value!.realm.realmIndex)
       rewards.skillBooks.push(skill)
     } else {
-      // 普通怪物装备掉落判定 - 直接使用怪物配置中的爆率
-      const equipmentDropRate = monster.dropTable.equipmentRate
+      // 普通怪物装备掉落判定 - 使用全局配置的爆率
+      const equipmentDropRate = DROP_CONFIG.equipmentBaseRate
 
       if (Math.random() < equipmentDropRate) {
         const slots = [
@@ -465,8 +465,8 @@ export const useGameStore = defineStore('game', () => {
         rewards.equipments.push(equipment)
       }
 
-      // 技能书掉落判定 - 直接使用怪物配置中的爆率
-      const skillBookDropRate = monster.dropTable.skillBookRate
+      // 技能书掉落判定 - 使用全局配置的爆率
+      const skillBookDropRate = DROP_CONFIG.skillBookBaseRate
 
       if (Math.random() < skillBookDropRate) {
         // 根据配置的比例决定主动还是被动技能
@@ -538,6 +538,26 @@ export const useGameStore = defineStore('game', () => {
     const index = player.value.inventory.equipments.findIndex(eq => eq.id === equipment.id)
     if (index > -1) {
       player.value.inventory.equipments.splice(index, 1)
+    }
+
+    saveGame()
+    return sellPrice
+  }
+
+  // ===== 技能书出售 =====
+  function sellSkill(skill: Skill): number {
+    if (!player.value) return 0
+
+    // 计算售价为学习消耗的50%
+    const sellPrice = Math.floor(skill.learnCost.lingStone * 0.5)
+
+    // 增加灵石
+    player.value.resources.lingStone = Math.floor(player.value.resources.lingStone + sellPrice)
+
+    // 从背包移除技能书
+    const index = player.value.inventory.skillBooks.findIndex(s => s.id === skill.id)
+    if (index > -1) {
+      player.value.inventory.skillBooks.splice(index, 1)
     }
 
     saveGame()
@@ -828,6 +848,7 @@ export const useGameStore = defineStore('game', () => {
     formatNumber,
     GM,
     sellEquipment,
+    sellSkill,
     enhanceEquipment,
     getEnhanceCost,
     getMonsterDropRates,

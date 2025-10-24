@@ -244,72 +244,76 @@ export function generateEquipmentAttributes(
 ): EquipmentAttributes {
   const rarityLevel = rarityToLevel[rarity]
 
-  // 大幅提升属性倍率：稀有度指数增长
-  const baseMultiplier = Math.pow(1.8, rarityLevel) // 从线性改为指数增长
-  const levelMultiplier = 1 + level * 0.15 // 提升等级加成
+  // 调整属性��率：使装备属性与怪物匹配
+  const baseMultiplier = Math.pow(1.5, rarityLevel) // 降低指数增长速度
+  const levelMultiplier = 1 + level * 0.1 // 降低等级加成
 
   // 境界加成：高境界装备额外加成
-  const realmBonus = rarityLevel >= 7 ? Math.pow(2, rarityLevel - 6) : 1
+  const realmBonus = rarityLevel >= 7 ? Math.pow(1.5, rarityLevel - 6) : 1
 
   // 品质加成：根据品质随机一个系数
   const qualityMultiplier = getQualityMultiplier(quality)
 
   const attributes: EquipmentAttributes = {}
 
-  // 根据部位分配主属性（大幅提升基础值）
+  // 根据部位分配主属性（调整基础值以匹配怪物强度）
   switch (slot) {
     case EquipmentSlot.WEAPON:
-      attributes.attack = Math.floor(500 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
+      // 攻击：1级凡品约3-5，随等级和稀有度成长
+      attributes.attack = Math.floor(3 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
       if (rarityLevel >= 2) {
-        attributes.critRate = (0.03 + rarityLevel * 0.015 + Math.random() * 0.03) * qualityMultiplier
+        attributes.critRate = (0.02 + rarityLevel * 0.01 + Math.random() * 0.02) * qualityMultiplier
       }
       if (rarityLevel >= 3) {
-        attributes.critDamage = (0.15 + rarityLevel * 0.08 + Math.random() * 0.15) * qualityMultiplier
+        attributes.critDamage = (0.1 + rarityLevel * 0.05 + Math.random() * 0.1) * qualityMultiplier
       }
       break
 
     case EquipmentSlot.ARMOR:
-      attributes.defense = Math.floor(400 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
-      attributes.hpMax = Math.floor(2000 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
+      // 防御：1级凡品约2-4，生命约30-50
+      attributes.defense = Math.floor(2 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
+      attributes.hpMax = Math.floor(30 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
       if (rarityLevel >= 2) {
-        attributes.block = (0.02 + rarityLevel * 0.015 + Math.random() * 0.02) * qualityMultiplier
+        attributes.block = (0.02 + rarityLevel * 0.01 + Math.random() * 0.02) * qualityMultiplier
       }
       break
 
     case EquipmentSlot.HELMET:
-      attributes.defense = Math.floor(300 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
-      attributes.hpMax = Math.floor(1500 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
+      // 防御：1级凡品约1-3，生命约20-40
+      attributes.defense = Math.floor(1.5 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
+      attributes.hpMax = Math.floor(20 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
       if (rarityLevel >= 2) {
-        attributes.mpMax = Math.floor(500 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
+        attributes.mpMax = Math.floor(10 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
       }
       break
 
     case EquipmentSlot.BOOTS:
-      attributes.speed = Math.floor(50 * baseMultiplier * levelMultiplier * qualityMultiplier * (0.9 + Math.random() * 0.2))
+      // 速度：1级凡品约2-4
+      attributes.speed = Math.floor(2 * baseMultiplier * levelMultiplier * qualityMultiplier * (0.9 + Math.random() * 0.2))
       if (rarityLevel >= 2) {
-        attributes.dodge = (0.02 + rarityLevel * 0.015 + Math.random() * 0.03) * qualityMultiplier
+        attributes.dodge = (0.02 + rarityLevel * 0.01 + Math.random() * 0.02) * qualityMultiplier
       }
       if (rarityLevel >= 3) {
-        attributes.defense = Math.floor(200 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
+        attributes.defense = Math.floor(1 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
       }
       break
 
     case EquipmentSlot.RING:
     case EquipmentSlot.NECKLACE:
-      // 饰品随机分配属性（提升数值）
+      // 饰品随机分配属性（数值相对较低）
       const attrs = ['attack', 'defense', 'hpMax', 'critRate', 'dodge']
       const selectedAttrs = attrs.sort(() => Math.random() - 0.5).slice(0, 2 + Math.min(rarityLevel, 3))
 
       selectedAttrs.forEach(attr => {
         switch (attr) {
           case 'attack':
-            attributes.attack = Math.floor(300 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
+            attributes.attack = Math.floor(2 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
             break
           case 'defense':
-            attributes.defense = Math.floor(250 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
+            attributes.defense = Math.floor(1.5 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
             break
           case 'hpMax':
-            attributes.hpMax = Math.floor(1000 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
+            attributes.hpMax = Math.floor(15 * baseMultiplier * levelMultiplier * realmBonus * qualityMultiplier * (0.9 + Math.random() * 0.2))
             break
           case 'critRate':
             attributes.critRate = (0.02 + rarityLevel * 0.01 + Math.random() * 0.02) * qualityMultiplier
