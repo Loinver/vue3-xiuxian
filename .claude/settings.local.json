@@ -12,7 +12,8 @@
       "Bash(pnpm dev:h5:*)",
       "Bash(node /tmp/analyze_game_balance.js:*)",
       "Bash(cat:*)",
-      "Read(//private/tmp/**)"
+      "Read(//private/tmp/**)",
+      "Bash(wc:*)"
     ],
     "deny": [],
     "ask": []

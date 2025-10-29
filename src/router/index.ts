@@ -9,12 +9,6 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '首页' },
   },
   {
-    path: '/realm',
-    name: 'Realm',
-    component: () => import('@/pages/realm/realm.vue'),
-    meta: { title: '境界突破' },
-  },
-  {
     path: '/equipment',
     name: 'Equipment',
     component: () => import('@/pages/equipment/equipment.vue'),

@@ -9,7 +9,6 @@
     <!-- 底部导航栏 -->
     <van-tabbar v-model="active" fixed @update:model-value="onChange">
       <van-tabbar-item icon="wap-home-o" to="/">首页</van-tabbar-item>
-      <van-tabbar-item icon="upgrade" to="/realm">境界</van-tabbar-item>
       <van-tabbar-item icon="bag-o" to="/equipment">背包</van-tabbar-item>
       <van-tabbar-item icon="fire-o" to="/skill">技能</van-tabbar-item>
       <van-tabbar-item icon="fire-o" to="/battle">战斗</van-tabbar-item>
@@ -46,8 +45,6 @@ const onChange = (index: number) => {
 
 // 应用生命周期
 onMounted(async () => {
-  console.log('App Mounted')
-
   // 初始化游戏
   await gameStore.initGame()
 

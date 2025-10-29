@@ -19,7 +19,6 @@ class GameStorage {
 
       request.onsuccess = () => {
         this.db = request.result
-        console.log('IndexedDB初始化成功')
         resolve()
       }
 
@@ -53,7 +52,6 @@ class GameStorage {
         })
 
         request.onsuccess = () => {
-          console.log('玩家数据保存成功')
           resolve()
         }
 
@@ -82,10 +80,8 @@ class GameStorage {
 
       request.onsuccess = () => {
         if (request.result) {
-          console.log('玩家数据加载成功')
           resolve(request.result.data)
         } else {
-          console.log('没有找到玩家数据')
           resolve(null)
         }
       }
@@ -110,7 +106,6 @@ class GameStorage {
       const request = store.delete('player')
 
       request.onsuccess = () => {
-        console.log('玩家数据删除成功')
         resolve()
       }
 
@@ -121,8 +116,8 @@ class GameStorage {
     })
   }
 
-  // 保存游戏设置
-  async saveSetting(key: string, value: any): Promise<void> {
+  // 保存游戏设置（使用泛型）
+  async saveSetting<T = unknown>(key: string, value: T): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.db) {
         reject(new Error('数据库未初始化'))
@@ -138,8 +133,8 @@ class GameStorage {
     })
   }
 
-  // 加载游戏设置
-  async loadSetting(key: string): Promise<any> {
+  // 加载游戏设置（使用泛型）
+  async loadSetting<T = unknown>(key: string): Promise<T | null> {
     return new Promise((resolve, reject) => {
       if (!this.db) {
         reject(new Error('数据库未初始化'))

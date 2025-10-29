@@ -64,7 +64,7 @@
       <div style="overflow-y: auto" class="skill-list">
         <div
           v-for="(skill, index) in player?.inventory.skillBooks"
-          :key="index"
+          :key="skill.id"
           class="skill-item"
         >
           <div class="skill-info">

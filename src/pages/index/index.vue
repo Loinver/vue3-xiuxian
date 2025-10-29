@@ -96,7 +96,7 @@
       <div class="card-title">战斗日志</div>
       <div style="overflow-y: auto" class="battle-log">
         <div
-          v-for="(log, index) in gameStore.battleLog.slice(0, 10)"
+          v-for="(log, index) in gameStore.battleLog.slice(-10).reverse()"
           :key="index"
           class="log-item"
         >

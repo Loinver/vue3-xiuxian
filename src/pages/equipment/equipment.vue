@@ -53,7 +53,7 @@
       <div style="overflow-y: auto" class="inventory-list">
         <div
           v-for="(eq, index) in player?.inventory.equipments"
-          :key="index"
+          :key="eq.id"
           class="inventory-item"
           :class="{ 'selected': isEquipmentSelected(eq) }"
           @longpress="handleLongPress(eq)"

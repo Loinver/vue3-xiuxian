@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import type { PlayerData, Equipment, Skill, MonsterConfig, BattleRewards, BattleRound } from '@/types/game'
 import { EquipmentSlot, SkillType, EquipmentQuality } from '@/types/game'
 import { gameConfig } from '@/config/gameConfig'
@@ -16,8 +16,9 @@ export const useGameStore = defineStore('game', () => {
   const currentMonster = ref<MonsterConfig | null>(null)
   const battleLog = ref<string[]>([])
 
-  let meditationTimer: number | null = null
-  let battleTimer: number | null = null
+  // 使用 ref 管理定时器，便于追踪和清理
+  const meditationTimer = ref<number | null>(null)
+  const battleTimer = ref<number | null>(null)
 
   // ===== 计算属性 =====
   const currentRealm = computed(() => {
@@ -39,8 +40,11 @@ export const useGameStore = defineStore('game', () => {
     })
   })
 
-  // 计算总属性(基础+装备+技能)
-  const totalAttributes = computed(() => {
+  // 计算总属性(基础+装备+技能) - 使用缓存优化性能
+  const cachedTotalAttributes = ref<PlayerData['attributes'] | null>(null)
+
+  // 计算属性的辅助函数
+  function calculateTotalAttributes() {
     if (!player.value) return null
     const base = { ...player.value.attributes }
 
@@ -77,21 +81,33 @@ export const useGameStore = defineStore('game', () => {
     }
 
     return base
-  })
+  }
+
+  // 监听装备和技能变化，只在必要时重新计算
+  watch(
+    () => player.value && {
+      equipment: player.value.equipment,
+      skills: player.value.skills,
+      attributes: player.value.attributes
+    },
+    () => {
+      cachedTotalAttributes.value = calculateTotalAttributes()
+    },
+    { deep: true, immediate: true }
+  )
+
+  const totalAttributes = computed(() => cachedTotalAttributes.value)
 
   // ===== 初始化 =====
   async function initGame() {
-    console.log('初始化游戏...')
     await gameStorage.init()
     const savedPlayer = await gameStorage.loadPlayer()
 
     if (savedPlayer) {
       player.value = migratePlayerData(savedPlayer)
-      console.log('加载存档成功')
     } else {
       player.value = createNewPlayer()
       await saveGame()
-      console.log('创建新角色')
     }
   }
 
@@ -204,15 +220,25 @@ export const useGameStore = defineStore('game', () => {
 
   function pauseIdle() {
     isGameRunning.value = false
-    if (meditationTimer) clearInterval(meditationTimer)
-    if (battleTimer) clearInterval(battleTimer)
+
+    // 清理打坐定时器
+    if (meditationTimer.value !== null) {
+      clearInterval(meditationTimer.value)
+      meditationTimer.value = null
+    }
+
+    // 清理战斗定时器
+    if (battleTimer.value !== null) {
+      clearInterval(battleTimer.value)
+      battleTimer.value = null
+    }
   }
 
   // 打坐修炼
   function startMeditation() {
-    if (meditationTimer) return
+    if (meditationTimer.value !== null) return
 
-    meditationTimer = setInterval(() => {
+    meditationTimer.value = setInterval(() => {
       if (player.value) {
         const rate = MEDITATION_SPEED.baseRate * (1 + player.value.realm.realmIndex * MEDITATION_SPEED.realmMultiplier)
         player.value.realm.cultivation = Math.floor(player.value.realm.cultivation + rate)
@@ -222,9 +248,9 @@ export const useGameStore = defineStore('game', () => {
 
   // 自动战斗
   function startBattle() {
-    if (battleTimer) return
+    if (battleTimer.value !== null) return
 
-    battleTimer = setInterval(() => {
+    battleTimer.value = setInterval(() => {
       if (player.value && player.value.attributes.hp > 0) {
         performBattle()
       }
@@ -510,9 +536,10 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function addBattleLog(message: string) {
-    battleLog.value.unshift(`[${new Date().toLocaleTimeString()}] ${message}`)
+    battleLog.value.push(`[${new Date().toLocaleTimeString()}] ${message}`)
+    // 保持日志数量在限制内，删除旧的日志
     if (battleLog.value.length > BATTLE_CONFIG.maxBattleLog) {
-      battleLog.value = battleLog.value.slice(0, BATTLE_CONFIG.maxBattleLog)
+      battleLog.value.splice(0, battleLog.value.length - BATTLE_CONFIG.maxBattleLog)
     }
   }
 
@@ -800,8 +827,6 @@ export const useGameStore = defineStore('game', () => {
 
   // ===== 重置游戏 =====
   async function resetGame() {
-    console.log('开始重置游戏...')
-
     // 停止所有定时器
     pauseIdle()
 
@@ -813,16 +838,13 @@ export const useGameStore = defineStore('game', () => {
 
     // 清空本地存储
     await gameStorage.clearPlayer()
-    console.log('存储已清空')
 
     // 重新初始化数据库和游戏
     await gameStorage.init()
-    console.log('存储重新初始化')
 
     // 创建新玩家
     player.value = createNewPlayer()
     await saveGame()
-    console.log('新角色已创建并保存')
   }
 
   return {
